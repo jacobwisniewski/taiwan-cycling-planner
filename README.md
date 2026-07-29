@@ -1,0 +1,37 @@
+# Lantern — Taiwan cycling planner
+
+An editable, camping-first Taiwan bicycle itinerary. The starter route goes clockwise down the east coast and returns north through the central mountains.
+
+## Run it
+
+```bash
+pnpm install
+pnpm dev
+```
+
+## What works
+
+- Editable day-by-day itinerary with distances, climbing, camp and onsen notes
+- Draggable overnight stops on a cycling-focused OpenStreetMap layer
+- Toggleable campground, hot-spring, supply and road-check markers
+- Registered, ask-first and community-reported wild-camp leads with confidence labels
+- Google Maps links and visible provenance for every mapped lead
+- A credited source library explaining how each official guide or rider report informed the plan
+- Automatic local saving
+- GPX route-point export
+- Mobile itinerary drawer
+
+## Important
+
+The route line is a planning sketch between overnight stops, not turn-by-turn navigation. Community camping reports are scouting leads rather than proof of legality, access or present-day conditions. Inspect sites in daylight, ask when possible, keep a paid fallback, and leave no trace.
+
+Confirm road access, tunnel rules, campsite registration, weather and mountain conditions immediately before travel.
+
+Useful official references:
+
+- [Taiwan Cycling Route No. 1](https://eng.taiwan.net.tw/m1.aspx?sNo=0029976)
+- [Taiwan legal campground search](https://camp.tad.gov.tw/)
+- [East Coast cycling routes](https://www.eastcoast-nsa.gov.tw/en/travel/bike-themes/)
+- [Taiwan highway conditions](https://168.thb.gov.tw/)
+
+The complete official and community source list appears inside the planner under **Sources & field notes**.
