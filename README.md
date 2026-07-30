@@ -9,6 +9,18 @@ pnpm install
 pnpm dev
 ```
 
+## Deployment
+
+The production site is a Cloudflare Worker with static assets at
+[`taiwan.jacobwisniewski.dev`](https://taiwan.jacobwisniewski.dev).
+
+```bash
+pnpm deploy
+```
+
+Buildkite verifies every commit and deploys `main`. Its agent environment needs
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+
 ## What works
 
 - Editable day-by-day itinerary with distances, climbing, camp and onsen notes
