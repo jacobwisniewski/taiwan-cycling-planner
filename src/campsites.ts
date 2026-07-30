@@ -12,6 +12,36 @@ type CampsiteRecord = {
   website: string;
   compliance: CampCompliance;
   violation: string;
+  communityMap?: boolean;
+};
+
+const countyNames: Record<string, string> = {
+  宜蘭縣: "Yilan County",
+  花蓮縣: "Hualien County",
+  臺東縣: "Taitung County",
+  台東縣: "Taitung County",
+  屏東縣: "Pingtung County",
+  高雄市: "Kaohsiung City",
+  臺南市: "Tainan City",
+  台南市: "Tainan City",
+  嘉義縣: "Chiayi County",
+  嘉義市: "Chiayi City",
+  雲林縣: "Yunlin County",
+  彰化縣: "Changhua County",
+  南投縣: "Nantou County",
+  臺中市: "Taichung City",
+  台中市: "Taichung City",
+  苗栗縣: "Miaoli County",
+  新竹縣: "Hsinchu County",
+  新竹市: "Hsinchu City",
+  桃園市: "Taoyuan City",
+  新北市: "New Taipei City",
+  臺北市: "Taipei City",
+  台北市: "Taipei City",
+  基隆市: "Keelung City",
+  澎湖縣: "Penghu County",
+  金門縣: "Kinmen County",
+  連江縣: "Lienchiang County",
 };
 
 const freeCampDetails: Record<
@@ -47,14 +77,19 @@ const isCampsiteRecord = (value: unknown): value is CampsiteRecord => {
     typeof record.website === "string" &&
     (record.compliance === "compliant" ||
       record.compliance === "violation") &&
-    typeof record.violation === "string"
+    typeof record.violation === "string" &&
+    (record.communityMap === undefined ||
+      typeof record.communityMap === "boolean")
   );
 };
 
 const toPlace = (campsite: CampsiteRecord): Place => {
   const compliant = campsite.compliance === "compliant";
   const freeCamp = freeCampDetails[campsite.name];
-  const location = [campsite.county, campsite.district]
+  const location = [
+    countyNames[campsite.county] ?? campsite.county,
+    campsite.district,
+  ]
     .filter((part) => part !== "")
     .join(" · ");
   const issue =
@@ -80,9 +115,11 @@ const toPlace = (campsite: CampsiteRecord): Place => {
     sourceIds: [
       "official-camps-data",
       ...(freeCamp === undefined ? [] : [freeCamp.sourceId]),
+      ...(campsite.communityMap === true ? ["legacy-community-camp-map"] : []),
     ],
     mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${campsite.name} ${campsite.address}`)}`,
     websiteUrl: campsite.website === "" ? undefined : campsite.website,
+    translationUrl: `https://translate.google.com/?sl=zh-TW&tl=en&text=${encodeURIComponent(`${campsite.name}\n${campsite.address}`)}&op=translate`,
   };
 };
 

@@ -17,3 +17,11 @@ without usable coordinates on or immediately around Taiwan were omitted. The
 source dataset remains authoritative; the app links every rendered record back
 to its dataset page and provides a Google Maps search using the published name
 and address.
+
+The public community map
+[Taiwan Camping ver 2016.03](https://www.google.com/maps/d/u/0/viewer?hl=en&mid=1pTl7jDSMLO5a5BQhougYlkQ5qyU)
+was used only as a legacy cross-reference. A government record is marked as
+cross-referenced when a map point is within 100 metres, or within one kilometre
+with a matching normalized Chinese name. This matched 244 current government
+records. Unmatched community-map placemarks are not included because the map is
+old and its embedded notice restricts republication.

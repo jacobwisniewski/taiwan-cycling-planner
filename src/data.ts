@@ -63,6 +63,15 @@ export const initialState: PlannerState = {
         "Free-camping status and reservation guidance for Bishan and Guizikeng public campgrounds.",
     },
     {
+      id: "legacy-community-camp-map",
+      title: "Taiwan Camping ver 2016.03",
+      publisher: "Community Google My Map",
+      kind: "community",
+      url: "https://www.google.com/maps/d/u/0/viewer?hl=en&mid=1pTl7jDSMLO5a5BQhougYlkQ5qyU",
+      usedFor:
+        "Legacy cross-reference for deduplicating 244 current government-backed campground records. Its unmatched and outdated placemarks are not republished.",
+    },
+    {
       id: "official-onsens",
       title: "Taiwan hot-spring regions",
       publisher: "Taiwan Tourism Administration",

@@ -18,6 +18,7 @@ export type Place = Coordinates & {
   campCompliance?: CampCompliance;
   statusLabel?: string;
   websiteUrl?: string;
+  translationUrl?: string;
   sourceIds: string[];
   mapsUrl: string;
 };

@@ -281,11 +281,15 @@ export function MapView({
           place.websiteUrl === undefined
             ? ""
             : `<a href="${escapeHtml(place.websiteUrl)}" target="_blank" rel="noreferrer">Campsite website ↗</a>`;
+        const translationLink =
+          place.translationUrl === undefined
+            ? ""
+            : `<a href="${escapeHtml(place.translationUrl)}" target="_blank" rel="noreferrer">English translation ↗</a>`;
         L.marker([place.lat, place.lng], {
           icon: makePlaceIcon(place),
         })
           .bindPopup(
-            `<div class="map-popup"><small>${escapeHtml(place.sleepStyle ?? place.kind)}</small><strong>${escapeHtml(place.name)}</strong><p>${escapeHtml(place.note)}</p><em>${escapeHtml(place.statusLabel ?? (place.verified ? "Location checked" : "Lead — verify before travel"))}</em><div>${sourceLinks}</div><div class="map-popup__links">${websiteLink}<a class="maps-link" href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noreferrer">Google Maps ↗</a></div></div>`,
+            `<div class="map-popup"><small>${escapeHtml(place.sleepStyle ?? place.kind)}</small><strong>${escapeHtml(place.name)}</strong><p>${escapeHtml(place.note)}</p><em>${escapeHtml(place.statusLabel ?? (place.verified ? "Location checked" : "Lead — verify before travel"))}</em><div>${sourceLinks}</div><div class="map-popup__links">${websiteLink}${translationLink}<a class="maps-link" href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noreferrer">Google Maps ↗</a></div></div>`,
           )
           .addTo(layer);
       });
