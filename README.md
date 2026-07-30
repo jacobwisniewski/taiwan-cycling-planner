@@ -15,7 +15,7 @@ The production site is a Cloudflare Worker with static assets at
 [`taiwan.jacobwisniewski.dev`](https://taiwan.jacobwisniewski.dev).
 
 ```bash
-pnpm deploy
+pnpm run deploy
 ```
 
 GitHub Actions verifies every pull request and deploys the latest `main` commit.
