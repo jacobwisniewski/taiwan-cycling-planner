@@ -85,7 +85,7 @@ export const downloadGpx = (
       },
     )
     .join("");
-  const gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="Lantern Taiwan Planner" xmlns="http://www.topografix.com/GPX/1/1">${waypoints}<trk><name>Taiwan — ${days.length} days</name>${trackSegments}</trk></gpx>`;
+  const gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="Taiwan Circuit" xmlns="http://www.topografix.com/GPX/1/1">${waypoints}<trk><name>Taiwan — ${days.length} days</name>${trackSegments}</trk></gpx>`;
   const link = document.createElement("a");
   link.href = URL.createObjectURL(
     new Blob([gpx], { type: "application/gpx+xml" }),

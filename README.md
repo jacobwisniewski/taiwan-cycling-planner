@@ -1,4 +1,4 @@
-# Lantern — Taiwan cycling planner
+# Taiwan Circuit
 
 An editable, camping-first Taiwan bicycle itinerary. The starter route goes clockwise down the east coast and returns north through the central mountains.
 

@@ -6,11 +6,9 @@ import {
   ChevronRight,
   Download,
   Flame,
-  Info,
   LoaderCircle,
   MapPinned,
   Menu,
-  Mountain,
   Plus,
   RotateCcw,
   Save,
@@ -255,19 +253,15 @@ function App() {
   return (
     <main>
       <header className="masthead">
-        <a className="brand" href="#" aria-label="Lantern home">
+        <a className="brand" href="#" aria-label="Taiwan Circuit home">
           <span className="brand__mark">
             <Bike size={20} strokeWidth={2.3} />
           </span>
           <span>
-            <strong>Lantern</strong>
-            <small>Taiwan on two wheels</small>
+            <strong>Taiwan Circuit</strong>
+            <small>Route planner</small>
           </span>
         </a>
-        <div className="masthead__route">
-          <span>Clockwise · {planner.days.length} days</span>
-          <strong>{planner.title}</strong>
-        </div>
         <div className="masthead__actions">
           <button
             className="button button--quiet"
@@ -308,17 +302,6 @@ function App() {
             />
           ) : selectedDay === undefined ? (
             <>
-              <div className="sidebar__intro">
-                <div>
-                  <p className="eyebrow">The long way round</p>
-                  <h1>Ride where the island breathes.</h1>
-                </div>
-                <p>
-                  Pacific coast south. Hot springs often. Camp most nights.
-                  Return through Taiwan’s green, high centre.
-                </p>
-              </div>
-
               <div className="totals" aria-label="Route totals">
                 <span>
                   <strong>{formatNumber(Math.round(totals.distance))}</strong>{" "}
@@ -475,38 +458,6 @@ function App() {
             ))}
           </div>
 
-          <div className="map-tip">
-            <Mountain size={17} />
-            <span>
-              <strong>
-                {routingActive
-                  ? `Routing roads · ${routedCount}/${planner.days.length}`
-                  : failedDayIds.size > 0
-                    ? `${routedCount}/${planner.days.length} stages routed`
-                    : `${planner.days.length}/${planner.days.length} stages on roads`}
-              </strong>
-              Drag Taipei or a numbered overnight stop to rebuild the bicycle
-              route.
-            </span>
-            <button
-              onClick={() =>
-                setNotice(
-                  "BRouter favours bicycle-suitable OpenStreetMap roads and paths. Always check live closures.",
-                )
-              }
-              aria-label="Route information"
-            >
-              <Info size={17} />
-            </button>
-          </div>
-
-          <div className="safety-note">
-            <AlertTriangle size={17} />
-            <span>
-              Central mountain roads can close after storms. Check official
-              road conditions before every high day.
-            </span>
-          </div>
         </section>
       </section>
 
