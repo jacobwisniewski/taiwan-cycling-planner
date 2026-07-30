@@ -32,8 +32,18 @@ export type RouteDay = Coordinates & {
   difficulty: "easy" | "steady" | "big";
 };
 
+export type RouteCoordinate = [lng: number, lat: number, elevation?: number];
+
+export type RoutedSegment = {
+  dayId: string;
+  coordinates: RouteCoordinate[];
+  distance: number;
+  climbing: number;
+};
+
 export type PlannerState = {
   title: string;
+  start: Coordinates & { name: string };
   days: RouteDay[];
   places: Place[];
   sources: Source[];

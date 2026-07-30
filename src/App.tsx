@@ -21,8 +21,14 @@ import {
 import { initialState } from "./data";
 import { DayEditor } from "./DayEditor";
 import { MapView } from "./MapView";
+import { routeDays } from "./routing";
 import { SourcesPanel } from "./SourcesPanel";
-import type { PlaceKind, PlannerState, RouteDay } from "./types";
+import type {
+  PlaceKind,
+  PlannerState,
+  RouteDay,
+  RoutedSegment,
+} from "./types";
 import { downloadGpx, loadPlanner, savePlanner, updateDayNumbers } from "./utils";
 
 const allKinds: PlaceKind[] = ["camp", "onsen", "supply", "caution"];
@@ -37,10 +43,27 @@ const kindLabels: Record<PlaceKind, string> = {
 const formatNumber = (value: number): string =>
   new Intl.NumberFormat("en-AU").format(value);
 
+const loadInitialPlanner = (): PlannerState => {
+  const saved = loadPlanner();
+  if (saved === null) {
+    return initialState;
+  }
+  const sources = [
+    ...saved.sources,
+    ...initialState.sources.filter(
+      (source) =>
+        !saved.sources.some((savedSource) => savedSource.id === source.id),
+    ),
+  ];
+  return {
+    ...saved,
+    start: saved.start ?? initialState.start,
+    sources,
+  };
+};
+
 function App() {
-  const [planner, setPlanner] = useState<PlannerState>(
-    () => loadPlanner() ?? initialState,
-  );
+  const [planner, setPlanner] = useState<PlannerState>(loadInitialPlanner);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
   const [visibleKinds, setVisibleKinds] = useState<Set<PlaceKind>>(
     new Set(allKinds),
@@ -48,17 +71,31 @@ function App() {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [showSources, setShowSources] = useState(false);
+  const [routedSegments, setRoutedSegments] = useState<RoutedSegment[]>([]);
+  const [failedDayIds, setFailedDayIds] = useState<Set<string>>(new Set());
+  const [routingActive, setRoutingActive] = useState(true);
 
   const selectedDay = planner.days.find((day) => day.id === selectedDayId);
   const totals = useMemo(
     () => ({
-      distance: planner.days.reduce((sum, day) => sum + day.distance, 0),
-      climbing: planner.days.reduce((sum, day) => sum + day.climbing, 0),
+      distance: planner.days.reduce((sum, day) => {
+        const routed = routedSegments.find(
+          (segment) => segment.dayId === day.id,
+        );
+        return sum + (routed?.distance ?? day.distance);
+      }, 0),
+      climbing: planner.days.reduce((sum, day) => {
+        const routed = routedSegments.find(
+          (segment) => segment.dayId === day.id,
+        );
+        return sum + (routed?.climbing ?? day.climbing);
+      }, 0),
       camps: planner.days.filter((day) => day.camp !== "Finish").length,
       onsens: planner.days.filter((day) => day.onsen !== null).length,
     }),
-    [planner.days],
+    [planner.days, routedSegments],
   );
+  const routedCount = routedSegments.length;
 
   useEffect(() => {
     const saveTimer = window.setTimeout(() => savePlanner(planner), 300);
@@ -72,6 +109,36 @@ function App() {
     const noticeTimer = window.setTimeout(() => setNotice(null), 2400);
     return () => window.clearTimeout(noticeTimer);
   }, [notice]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setRoutedSegments([]);
+    setFailedDayIds(new Set());
+    setRoutingActive(true);
+    const routingTimer = window.setTimeout(() => {
+      void routeDays(
+        planner.start,
+        planner.days,
+        controller.signal,
+        (segment) =>
+          setRoutedSegments((current) => [
+            ...current.filter((item) => item.dayId !== segment.dayId),
+            segment,
+          ]),
+        (dayId) =>
+          setFailedDayIds((current) => new Set([...current, dayId])),
+      ).finally(() => {
+        if (!controller.signal.aborted) {
+          setRoutingActive(false);
+        }
+      });
+    }, 450);
+
+    return () => {
+      window.clearTimeout(routingTimer);
+      controller.abort();
+    };
+  }, [planner.days, planner.start]);
 
   const updateDay = useCallback((updatedDay: RouteDay) => {
     setPlanner((current) => ({
@@ -90,10 +157,18 @@ function App() {
           day.id === id ? { ...day, lat, lng } : day,
         ),
       }));
-      setNotice("Stop moved · update the road distance when checked");
+      setNotice("Stop moved · rebuilding bicycle route");
     },
     [],
   );
+
+  const moveStart = useCallback((lat: number, lng: number) => {
+    setPlanner((current) => ({
+      ...current,
+      start: { ...current.start, lat, lng },
+    }));
+    setNotice("Start moved · rebuilding bicycle route");
+  }, []);
 
   const selectDay = useCallback((id: string) => {
     setSelectedDayId(id);
@@ -203,7 +278,9 @@ function App() {
           </button>
           <button
             className="button"
-            onClick={() => downloadGpx(planner.days)}
+            onClick={() =>
+              downloadGpx(planner.start, planner.days, routedSegments)
+            }
           >
             <Download size={16} /> <span>Export GPX</span>
           </button>
@@ -242,10 +319,12 @@ function App() {
 
               <div className="totals" aria-label="Route totals">
                 <span>
-                  <strong>{formatNumber(totals.distance)}</strong> km
+                  <strong>{formatNumber(Math.round(totals.distance))}</strong>{" "}
+                  km
                 </span>
                 <span>
-                  <strong>{formatNumber(totals.climbing)}</strong> m up
+                  <strong>{formatNumber(Math.round(totals.climbing))}</strong>{" "}
+                  m up
                 </span>
                 <span>
                   <strong>{totals.camps}</strong> camps
@@ -277,7 +356,11 @@ function App() {
               </div>
 
               <div className="day-list">
-                {planner.days.map((day) => (
+                {planner.days.map((day) => {
+                  const routed = routedSegments.find(
+                    (segment) => segment.dayId === day.id,
+                  );
+                  return (
                   <button
                     key={day.id}
                     className="day-row"
@@ -289,7 +372,11 @@ function App() {
                     <span className="day-main">
                       <strong>{day.to}</strong>
                       <small>
-                        {day.distance} km · {formatNumber(day.climbing)} m
+                        {(routed?.distance ?? day.distance).toFixed(0)} km ·{" "}
+                        {formatNumber(
+                          Math.round(routed?.climbing ?? day.climbing),
+                        )}{" "}
+                        m
                       </small>
                       <em>
                         <TentTree size={13} /> {day.camp}
@@ -302,7 +389,8 @@ function App() {
                     )}
                     <ChevronRight className="row-arrow" size={17} />
                   </button>
-                ))}
+                  );
+                })}
               </div>
               <button className="reset" onClick={resetPlan}>
                 <RotateCcw size={14} /> Restore starter route
@@ -321,12 +409,16 @@ function App() {
 
         <section className="map-shell">
           <MapView
+            start={planner.start}
             days={planner.days}
+            routedSegments={routedSegments}
+            failedDayIds={failedDayIds}
             places={planner.places}
             sources={planner.sources}
             visibleKinds={visibleKinds}
             selectedDayId={selectedDayId}
             onSelectDay={selectDay}
+            onMoveStart={moveStart}
             onMoveDay={moveDayPoint}
           />
 
@@ -354,14 +446,20 @@ function App() {
           <div className="map-tip">
             <Mountain size={17} />
             <span>
-              <strong>Shape the route</strong>
-              Drag a numbered overnight stop. Use the cycle map to trace
-              marked paths.
+              <strong>
+                {routingActive
+                  ? `Routing roads · ${routedCount}/${planner.days.length}`
+                  : failedDayIds.size > 0
+                    ? `${routedCount}/${planner.days.length} stages routed`
+                    : `${planner.days.length}/${planner.days.length} stages on roads`}
+              </strong>
+              Drag Taipei or a numbered overnight stop to rebuild the bicycle
+              route.
             </span>
             <button
               onClick={() =>
                 setNotice(
-                  "The line is a planning sketch, not turn-by-turn navigation",
+                  "BRouter favours bicycle-suitable OpenStreetMap roads and paths. Always check live closures.",
                 )
               }
               aria-label="Route information"

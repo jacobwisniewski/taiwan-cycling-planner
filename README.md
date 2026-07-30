@@ -25,18 +25,24 @@ secrets.
 ## What works
 
 - Editable day-by-day itinerary with distances, climbing, camp and onsen notes
-- Draggable overnight stops on a cycling-focused OpenStreetMap layer
+- Road-by-road bicycle routing over OpenStreetMap with BRouter's trekking profile
+- Draggable Taipei start and overnight stops that automatically rebuild each stage
 - Toggleable campground, hot-spring, supply and road-check markers
 - Registered, ask-first and community-reported wild-camp leads with confidence labels
 - Google Maps links and visible provenance for every mapped lead
 - A credited source library explaining how each official guide or rider report informed the plan
 - Automatic local saving
-- GPX route-point export
+- Full road-geometry GPX track export, with overnight waypoints
 - Mobile itinerary drawer
 
 ## Important
 
-The route line is a planning sketch between overnight stops, not turn-by-turn navigation. Community camping reports are scouting leads rather than proof of legality, access or present-day conditions. Inspect sites in daylight, ask when possible, keep a paid fallback, and leave no trace.
+The route follows bicycle-suitable OpenStreetMap roads and paths selected by
+BRouter. It is still planning guidance rather than guaranteed turn-by-turn
+navigation: map data, access and closures can change. Community camping reports
+are scouting leads rather than proof of legality, access or present-day
+conditions. Inspect sites in daylight, ask when possible, keep a paid fallback,
+and leave no trace.
 
 Confirm road access, tunnel rules, campsite registration, weather and mountain conditions immediately before travel.
 

@@ -453,9 +453,49 @@ a:focus-visible {
 }
 
 .day-marker-shell,
-.place-marker-shell {
+.place-marker-shell,
+.start-marker-shell {
   background: transparent;
   border: 0;
+}
+
+.start-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  min-height: 34px;
+  padding: 5px 9px 4px;
+  color: var(--paper);
+  background: var(--red);
+  border: 2px solid var(--paper);
+  border-radius: 7px;
+  box-shadow: 0 4px 12px rgba(20, 49, 41, 0.24);
+  font-family: "DM Sans", sans-serif;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+}
+
+.start-marker::after {
+  position: absolute;
+  bottom: -7px;
+  width: 10px;
+  height: 10px;
+  content: "";
+  background: var(--red);
+  border-right: 2px solid var(--paper);
+  border-bottom: 2px solid var(--paper);
+  transform: rotate(45deg);
+}
+
+.start-marker small {
+  position: relative;
+  z-index: 1;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .day-marker,

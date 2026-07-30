@@ -1,4 +1,9 @@
-import type { Coordinates, PlannerState, RouteDay } from "./types";
+import type {
+  Coordinates,
+  PlannerState,
+  RouteDay,
+  RoutedSegment,
+} from "./types";
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -39,14 +44,48 @@ export const loadPlanner = (): PlannerState | null => {
   }
 };
 
-export const downloadGpx = (days: RouteDay[]): void => {
-  const points = days
-    .map(
+const escapeXml = (value: string): string =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+
+export const downloadGpx = (
+  start: Coordinates & { name: string },
+  days: RouteDay[],
+  routedSegments: RoutedSegment[],
+): void => {
+  const waypoints = [
+    `<wpt lat="${start.lat}" lon="${start.lng}"><name>Start: ${escapeXml(start.name)}</name></wpt>`,
+    ...days.map(
       (day) =>
-        `<rtept lat="${day.lat}" lon="${day.lng}"><name>Day ${day.day}: ${day.to}</name><desc>${day.camp}</desc></rtept>`,
+        `<wpt lat="${day.lat}" lon="${day.lng}"><name>Day ${day.day}: ${escapeXml(day.to)}</name><desc>${escapeXml(day.camp)}</desc></wpt>`,
+    ),
+  ].join("");
+  const trackSegments = days
+    .map(
+      (day, index) => {
+        const routed = routedSegments.find(
+          (segment) => segment.dayId === day.id,
+        );
+        const previous = index === 0 ? start : days[index - 1];
+        const coordinates = routed?.coordinates ?? [
+          [previous.lng, previous.lat],
+          [day.lng, day.lat],
+        ];
+        const points = coordinates
+          .map(
+            ([lng, lat, elevation]) =>
+              `<trkpt lat="${lat}" lon="${lng}">${elevation === undefined ? "" : `<ele>${elevation}</ele>`}</trkpt>`,
+          )
+          .join("");
+        return `<trkseg>${points}</trkseg>`;
+      },
     )
     .join("");
-  const gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="Lantern Taiwan Planner" xmlns="http://www.topografix.com/GPX/1/1"><rte><name>Taiwan — ${days.length} days</name>${points}</rte></gpx>`;
+  const gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="Lantern Taiwan Planner" xmlns="http://www.topografix.com/GPX/1/1">${waypoints}<trk><name>Taiwan — ${days.length} days</name>${trackSegments}</trk></gpx>`;
   const link = document.createElement("a");
   link.href = URL.createObjectURL(
     new Blob([gpx], { type: "application/gpx+xml" }),

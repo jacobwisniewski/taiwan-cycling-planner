@@ -2,6 +2,11 @@ import type { PlannerState } from "./types";
 
 export const initialState: PlannerState = {
   title: "Pacific out, mountain home",
+  start: {
+    name: "Taipei",
+    lat: 25.033,
+    lng: 121.5654,
+  },
   sources: [
     {
       id: "official-route-one",
@@ -119,6 +124,15 @@ export const initialState: PlannerState = {
       url: "https://168.thb.gov.tw/",
       usedFor:
         "Mandatory pre-ride checks for Suhua, Wuling, mountain highways, closures, and traffic controls.",
+    },
+    {
+      id: "brouter",
+      title: "BRouter bicycle routing engine",
+      publisher: "BRouter",
+      kind: "community",
+      url: "https://github.com/abrensch/brouter",
+      usedFor:
+        "Road-by-road bicycle route geometry, distance, and estimated ascent between each editable overnight stop.",
     },
   ],
   days: [

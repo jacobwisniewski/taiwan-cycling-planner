@@ -2,15 +2,26 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-import type { Place, PlaceKind, RouteDay, Source } from "./types";
+import type {
+  Coordinates,
+  Place,
+  PlaceKind,
+  RouteDay,
+  RoutedSegment,
+  Source,
+} from "./types";
 
 type MapViewProps = {
+  start: Coordinates & { name: string };
   days: RouteDay[];
+  routedSegments: RoutedSegment[];
+  failedDayIds: Set<string>;
   places: Place[];
   sources: Source[];
   visibleKinds: Set<PlaceKind>;
   selectedDayId: string | null;
   onSelectDay: (id: string) => void;
+  onMoveStart: (lat: number, lng: number) => void;
   onMoveDay: (id: string, lat: number, lng: number) => void;
 };
 
@@ -37,13 +48,24 @@ const makeDayIcon = (day: number, selected: boolean): L.DivIcon =>
     iconAnchor: [17, 17],
   });
 
+const startIcon = L.divIcon({
+  className: "start-marker-shell",
+  html: '<span class="start-marker">START<small>Taipei</small></span>',
+  iconSize: [60, 38],
+  iconAnchor: [30, 35],
+});
+
 export function MapView({
+  start,
   days,
+  routedSegments,
+  failedDayIds,
   places,
   sources,
   visibleKinds,
   selectedDayId,
   onSelectDay,
+  onMoveStart,
   onMoveDay,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,18 +80,19 @@ export function MapView({
     const map = L.map(containerRef.current, {
       zoomControl: false,
       minZoom: 7,
+      zoomSnap: 0.5,
       maxBounds: [
         [20.9, 119.8],
         [25.7, 122.3],
       ],
-    }).setView([23.7, 121], 8);
+    }).setView([23.65, 121], 7.5);
 
     const cycleLayer = L.tileLayer(
       "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
       {
         maxZoom: 20,
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://www.cyclosm.org">CyclOSM</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://www.cyclosm.org">CyclOSM</a> · routing <a href="https://github.com/abrensch/brouter">BRouter</a>',
       },
     );
     const simpleLayer = L.tileLayer(
@@ -77,7 +100,7 @@ export function MapView({
       {
         maxZoom: 19,
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · routing <a href="https://github.com/abrensch/brouter">BRouter</a>',
       },
     );
     cycleLayer.addTo(map);
@@ -106,36 +129,69 @@ export function MapView({
     routeLayerRef.current?.remove();
     const layer = L.layerGroup().addTo(map);
     routeLayerRef.current = layer;
-    const start: [number, number] = [25.033, 121.5654];
-    const coordinates: [number, number][] = [
-      start,
-      ...days.map((day): [number, number] => [day.lat, day.lng]),
-    ];
 
-    L.polyline(coordinates, {
-      color: "#f3e7c9",
-      weight: 9,
-      opacity: 0.95,
-      lineCap: "round",
-      lineJoin: "round",
+    days.forEach((day, index) => {
+      const segment = routedSegments.find(
+        (candidate) => candidate.dayId === day.id,
+      );
+      const previous = index === 0 ? start : days[index - 1];
+      const coordinates: [number, number][] =
+        segment?.coordinates.map(
+          ([lng, lat]): [number, number] => [lat, lng],
+        ) ?? [
+          [previous.lat, previous.lng],
+          [day.lat, day.lng],
+        ];
+
+      L.polyline(coordinates, {
+        color: "#f3e7c9",
+        weight: segment === undefined ? 5 : 8,
+        opacity: segment === undefined ? 0.7 : 0.95,
+        lineCap: "round",
+        lineJoin: "round",
+      }).addTo(layer);
+      L.polyline(coordinates, {
+        color: failedDayIds.has(day.id) ? "#9a5446" : "#c94f32",
+        weight: segment === undefined ? 2 : 4,
+        opacity: segment === undefined ? 0.72 : 1,
+        lineCap: "round",
+        lineJoin: "round",
+        dashArray: segment === undefined ? "4 8" : undefined,
+      })
+        .bindTooltip(
+          segment === undefined
+            ? `Day ${day.day} · ${failedDayIds.has(day.id) ? "Routing unavailable" : "Routing roads…"}`
+            : `Day ${day.day} · ${segment.distance.toFixed(1)} km · ${Math.round(segment.climbing)} m up`,
+          { sticky: true },
+        )
+        .addTo(layer);
+    });
+
+    const startMarker = L.marker([start.lat, start.lng], {
+      draggable: true,
+      icon: startIcon,
+      zIndexOffset: 1100,
     }).addTo(layer);
-    L.polyline(coordinates, {
-      color: "#c94f32",
-      weight: 4,
-      opacity: 1,
-      lineCap: "round",
-      lineJoin: "round",
-      dashArray: "2 9",
-    }).addTo(layer);
+    startMarker.bindTooltip(`<strong>Start · ${start.name}</strong>`, {
+      direction: "top",
+      offset: [0, -29],
+    });
+    startMarker.on("dragend", () => {
+      const position = startMarker.getLatLng();
+      onMoveStart(position.lat, position.lng);
+    });
 
     days.forEach((day) => {
+      const segment = routedSegments.find(
+        (candidate) => candidate.dayId === day.id,
+      );
       const marker = L.marker([day.lat, day.lng], {
         draggable: true,
         icon: makeDayIcon(day.day, day.id === selectedDayId),
         zIndexOffset: day.id === selectedDayId ? 1000 : 0,
       }).addTo(layer);
       marker.bindTooltip(
-        `<strong>Day ${day.day} · ${day.to}</strong><br>${day.distance} km · ${day.camp}`,
+        `<strong>Day ${day.day} · ${day.to}</strong><br>${segment?.distance.toFixed(1) ?? day.distance} km · ${day.camp}`,
         { direction: "top", offset: [0, -13] },
       );
       marker.on("click", () => onSelectDay(day.id));
@@ -165,11 +221,15 @@ export function MapView({
           .addTo(layer);
       });
   }, [
+    start,
     days,
+    routedSegments,
+    failedDayIds,
     places,
     sources,
     visibleKinds,
     selectedDayId,
+    onMoveStart,
     onMoveDay,
     onSelectDay,
   ]);
