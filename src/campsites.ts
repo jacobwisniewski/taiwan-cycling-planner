@@ -126,7 +126,9 @@ const toPlace = (campsite: CampsiteRecord): Place => {
 export const loadOfficialCampsites = async (
   signal: AbortSignal,
 ): Promise<Place[]> => {
-  const response = await fetch("/data/campsites.json", { signal });
+  const response = await fetch("/data/campsites.json?v=2026-07-30-community", {
+    signal,
+  });
   if (!response.ok) {
     throw new Error(`campsites: dataset returned ${response.status}`);
   }
