@@ -28,6 +28,8 @@ secrets.
 - Road-by-road bicycle routing over OpenStreetMap with BRouter's trekking profile
 - Draggable Taipei start and overnight stops that automatically rebuild each stage
 - Toggleable campground, hot-spring, supply and road-check markers
+- Clustered island-wide layer of 1,700+ Tourism Administration campground
+  records, including regulatory status and Google Maps links
 - Registered, ask-first and community-reported wild-camp leads with confidence labels
 - Google Maps links and visible provenance for every mapped lead
 - A credited source library explaining how each official guide or rider report informed the plan

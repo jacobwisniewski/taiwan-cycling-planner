@@ -1,6 +1,7 @@
 export type PlaceKind = "camp" | "onsen" | "supply" | "caution";
 export type SourceKind = "official" | "rider report" | "community";
 export type SleepStyle = "registered" | "ask first" | "wild lead";
+export type CampCompliance = "compliant" | "violation";
 
 export type Coordinates = {
   lat: number;
@@ -14,6 +15,9 @@ export type Place = Coordinates & {
   note: string;
   verified: boolean;
   sleepStyle?: SleepStyle;
+  campCompliance?: CampCompliance;
+  statusLabel?: string;
+  websiteUrl?: string;
   sourceIds: string[];
   mapsUrl: string;
 };

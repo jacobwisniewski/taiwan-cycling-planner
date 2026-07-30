@@ -45,6 +45,24 @@ export const initialState: PlannerState = {
         "Registration checks for formal campgrounds. Recheck every campground before departure.",
     },
     {
+      id: "official-camps-data",
+      title: "Campground Information for the Whole of Taiwan",
+      publisher: "Taiwan Tourism Administration",
+      kind: "official",
+      url: "https://data.gov.tw/en/datasets/132066",
+      usedFor:
+        "Island-wide campground names, coordinates, addresses, websites, and regulatory-compliance labels. Open Government Data License 1.0; updated every March.",
+    },
+    {
+      id: "taipei-free-camps",
+      title: "Where to Go City Camping",
+      publisher: "Taipei Travel",
+      kind: "official",
+      url: "https://www.travel.taipei/en/pictorial/article/65940",
+      usedFor:
+        "Free-camping status and reservation guidance for Bishan and Guizikeng public campgrounds.",
+    },
+    {
       id: "official-onsens",
       title: "Taiwan hot-spring regions",
       publisher: "Taiwan Tourism Administration",

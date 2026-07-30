@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
 
 import type {
   Coordinates,
@@ -32,12 +34,44 @@ const placeColors: Record<PlaceKind, string> = {
   caution: "#a43d36",
 };
 
-const makePlaceIcon = (kind: PlaceKind): L.DivIcon =>
-  L.divIcon({
+const escapeHtml = (value: string): string =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const makePlaceIcon = (place: Place): L.DivIcon => {
+  const markerColor =
+    place.kind === "camp" && place.campCompliance === "violation"
+      ? placeColors.caution
+      : placeColors[place.kind];
+  const symbol =
+    place.kind === "camp"
+      ? place.campCompliance === "violation"
+        ? "!"
+        : "⌂"
+      : place.kind === "onsen"
+        ? "♨"
+        : place.kind === "supply"
+          ? "＋"
+          : "!";
+
+  return L.divIcon({
     className: "place-marker-shell",
-    html: `<span class="place-marker" style="--marker:${placeColors[kind]}">${kind === "camp" ? "⌂" : kind === "onsen" ? "♨" : kind === "supply" ? "＋" : "!"}</span>`,
+    html: `<span class="place-marker" style="--marker:${markerColor}">${symbol}</span>`,
     iconSize: [30, 30],
     iconAnchor: [15, 15],
+  });
+};
+
+const makeClusterIcon = (cluster: L.MarkerCluster): L.DivIcon =>
+  L.divIcon({
+    className: "camp-cluster-shell",
+    html: `<span class="camp-cluster"><strong>${cluster.getChildCount()}</strong><small>places</small></span>`,
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
   });
 
 const makeDayIcon = (day: number, selected: boolean): L.DivIcon =>
@@ -71,6 +105,7 @@ export function MapView({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const routeLayerRef = useRef<L.LayerGroup | null>(null);
+  const placeLayerRef = useRef<L.MarkerClusterGroup | null>(null);
 
   useEffect(() => {
     if (containerRef.current === null || mapRef.current !== null) {
@@ -92,7 +127,7 @@ export function MapView({
       {
         maxZoom: 20,
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://www.cyclosm.org">CyclOSM</a> · routing <a href="https://github.com/abrensch/brouter">BRouter</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://www.cyclosm.org">CyclOSM</a> · routing <a href="https://github.com/abrensch/brouter">BRouter</a> · camps <a href="https://data.gov.tw/en/datasets/132066">Taiwan Tourism Administration</a>',
       },
     );
     const simpleLayer = L.tileLayer(
@@ -100,7 +135,7 @@ export function MapView({
       {
         maxZoom: 19,
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · routing <a href="https://github.com/abrensch/brouter">BRouter</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · routing <a href="https://github.com/abrensch/brouter">BRouter</a> · camps <a href="https://data.gov.tw/en/datasets/132066">Taiwan Tourism Administration</a>',
       },
     );
     cycleLayer.addTo(map);
@@ -201,6 +236,36 @@ export function MapView({
       });
     });
 
+  }, [
+    start,
+    days,
+    routedSegments,
+    failedDayIds,
+    selectedDayId,
+    onMoveStart,
+    onMoveDay,
+    onSelectDay,
+  ]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map === null) {
+      return;
+    }
+
+    placeLayerRef.current?.remove();
+    const layer = L.markerClusterGroup({
+      chunkedLoading: true,
+      chunkInterval: 100,
+      chunkDelay: 30,
+      disableClusteringAtZoom: 14,
+      iconCreateFunction: makeClusterIcon,
+      maxClusterRadius: 48,
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+    }).addTo(map);
+    placeLayerRef.current = layer;
+
     places
       .filter((place) => visibleKinds.has(place.kind))
       .forEach((place) => {
@@ -209,30 +274,29 @@ export function MapView({
           .filter((source) => source !== undefined)
           .map(
             (source) =>
-              `<a href="${source.url}" target="_blank" rel="noreferrer">${source.publisher}</a>`,
+              `<a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.publisher)}</a>`,
           )
           .join(" · ");
+        const websiteLink =
+          place.websiteUrl === undefined
+            ? ""
+            : `<a href="${escapeHtml(place.websiteUrl)}" target="_blank" rel="noreferrer">Campsite website ↗</a>`;
         L.marker([place.lat, place.lng], {
-          icon: makePlaceIcon(place.kind),
+          icon: makePlaceIcon(place),
         })
           .bindPopup(
-            `<div class="map-popup"><small>${place.sleepStyle ?? place.kind}</small><strong>${place.name}</strong><p>${place.note}</p><em>${place.verified ? "Location checked" : "Lead — verify before travel"}</em><div>${sourceLinks}</div><a class="maps-link" href="${place.mapsUrl}" target="_blank" rel="noreferrer">Open in Google Maps ↗</a></div>`,
+            `<div class="map-popup"><small>${escapeHtml(place.sleepStyle ?? place.kind)}</small><strong>${escapeHtml(place.name)}</strong><p>${escapeHtml(place.note)}</p><em>${escapeHtml(place.statusLabel ?? (place.verified ? "Location checked" : "Lead — verify before travel"))}</em><div>${sourceLinks}</div><div class="map-popup__links">${websiteLink}<a class="maps-link" href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noreferrer">Google Maps ↗</a></div></div>`,
           )
           .addTo(layer);
       });
-  }, [
-    start,
-    days,
-    routedSegments,
-    failedDayIds,
-    places,
-    sources,
-    visibleKinds,
-    selectedDayId,
-    onMoveStart,
-    onMoveDay,
-    onSelectDay,
-  ]);
+
+    return () => {
+      layer.remove();
+      if (placeLayerRef.current === layer) {
+        placeLayerRef.current = null;
+      }
+    };
+  }, [places, sources, visibleKinds]);
 
   return <div ref={containerRef} className="map" aria-label="Route map" />;
 }

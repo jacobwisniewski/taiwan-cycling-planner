@@ -404,9 +404,39 @@ a:focus-visible {
 
 .day-marker-shell,
 .place-marker-shell,
-.start-marker-shell {
+.start-marker-shell,
+.camp-cluster-shell {
   background: transparent;
   border: 0;
+}
+
+.camp-cluster {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 48px;
+  height: 48px;
+  color: var(--paper);
+  background: var(--green);
+  border: 3px solid color-mix(in oklch, var(--paper), transparent 10%);
+  border-radius: 50%;
+  box-shadow:
+    0 5px 16px rgba(20, 49, 41, 0.24),
+    0 0 0 5px color-mix(in oklch, var(--green), transparent 78%);
+  line-height: 1;
+}
+
+.camp-cluster strong {
+  font-family: "Fraunces", serif;
+  font-size: 13px;
+}
+
+.camp-cluster small {
+  margin-top: 2px;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
 .start-marker {
@@ -534,6 +564,10 @@ a:focus-visible {
   flex-wrap: wrap;
   gap: 3px;
   font-size: 9px;
+}
+
+.map-popup__links {
+  margin-top: 2px;
 }
 
 .map-popup a {

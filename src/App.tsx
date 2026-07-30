@@ -17,12 +17,14 @@ import {
   X,
 } from "lucide-react";
 
+import { loadOfficialCampsites } from "./campsites";
 import { initialState } from "./data";
 import { DayEditor } from "./DayEditor";
 import { MapView } from "./MapView";
 import { routeDays } from "./routing";
 import { SourcesPanel } from "./SourcesPanel";
 import type {
+  Place,
   PlaceKind,
   PlannerState,
   RouteDay,
@@ -73,8 +75,16 @@ function App() {
   const [routedSegments, setRoutedSegments] = useState<RoutedSegment[]>([]);
   const [failedDayIds, setFailedDayIds] = useState<Set<string>>(new Set());
   const [routingActive, setRoutingActive] = useState(true);
+  const [officialCampsites, setOfficialCampsites] = useState<Place[]>([]);
 
   const selectedDay = planner.days.find((day) => day.id === selectedDayId);
+  const mapPlaces = useMemo(
+    () => [...planner.places, ...officialCampsites],
+    [officialCampsites, planner.places],
+  );
+  const campsiteCount = mapPlaces.filter(
+    (place) => place.kind === "camp",
+  ).length;
   const totals = useMemo(
     () => ({
       distance: planner.days.reduce((sum, day) => {
@@ -109,6 +119,19 @@ function App() {
     const noticeTimer = window.setTimeout(() => setNotice(null), 2400);
     return () => window.clearTimeout(noticeTimer);
   }, [notice]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadOfficialCampsites(controller.signal)
+      .then(setOfficialCampsites)
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) {
+          console.warn(error);
+          setNotice("The island-wide campsite layer could not be loaded");
+        }
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -402,7 +425,7 @@ function App() {
             days={planner.days}
             routedSegments={routedSegments}
             failedDayIds={failedDayIds}
-            places={planner.places}
+            places={mapPlaces}
             sources={planner.sources}
             visibleKinds={visibleKinds}
             selectedDayId={selectedDayId}
@@ -453,7 +476,11 @@ function App() {
                 {kind === "onsen" && <Flame size={16} />}
                 {kind === "supply" && <MapPinned size={16} />}
                 {kind === "caution" && <AlertTriangle size={16} />}
-                <span>{kindLabels[kind]}</span>
+                <span>
+                  {kind === "camp" && campsiteCount > 0
+                    ? `${formatNumber(campsiteCount)} camps`
+                    : kindLabels[kind]}
+                </span>
               </button>
             ))}
           </div>
