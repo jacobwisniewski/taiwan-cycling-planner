@@ -116,10 +116,6 @@ export function MapView({
       zoomControl: false,
       minZoom: 7,
       zoomSnap: 0.5,
-      maxBounds: [
-        [20.9, 119.8],
-        [25.7, 122.3],
-      ],
     }).setView([23.65, 121], 7.5);
 
     const cycleLayer = L.tileLayer(
@@ -263,6 +259,7 @@ export function MapView({
       maxClusterRadius: 48,
       showCoverageOnHover: false,
       spiderfyOnMaxZoom: true,
+      zoomToBoundsOnClick: true,
     }).addTo(map);
     placeLayerRef.current = layer;
 
