@@ -18,8 +18,9 @@ The production site is a Cloudflare Worker with static assets at
 pnpm deploy
 ```
 
-Buildkite verifies every commit and deploys `main`. Its agent environment needs
-`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+GitHub Actions verifies every pull request and deploys the latest `main` commit.
+The repository needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` Actions
+secrets.
 
 ## What works
 
