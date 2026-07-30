@@ -598,6 +598,97 @@ a:focus-visible {
   color: var(--red);
 }
 
+.map-shell .leaflet-overlay-pane {
+  transition: opacity 220ms ease-out;
+}
+
+.map-shell.is-routing .leaflet-overlay-pane {
+  opacity: 0.58;
+}
+
+.route-loading {
+  position: absolute;
+  z-index: 650;
+  top: 20px;
+  left: 50%;
+  min-width: 255px;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px 10px 9px;
+  color: var(--paper);
+  background: var(--ink);
+  border: 1px solid color-mix(in oklch, var(--paper), transparent 82%);
+  border-radius: 9px;
+  box-shadow: 0 9px 30px rgba(24, 60, 51, 0.24);
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: route-loading-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.route-loading__spinner {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: var(--gold);
+  background: color-mix(in oklch, var(--paper), transparent 91%);
+  border-radius: 50%;
+}
+
+.route-loading__spinner svg {
+  animation: route-spin 900ms linear infinite;
+}
+
+.route-loading__copy {
+  display: grid;
+  gap: 1px;
+}
+
+.route-loading__copy strong {
+  color: var(--gold);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.route-loading__copy small {
+  color: var(--paper);
+  font-size: 10px;
+}
+
+.route-loading__copy i {
+  height: 2px;
+  margin-top: 5px;
+  overflow: hidden;
+  background: color-mix(in oklch, var(--paper), transparent 82%);
+  border-radius: 999px;
+}
+
+.route-loading__copy i span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--gold);
+  border-radius: inherit;
+  transform-origin: left;
+  transition: transform 220ms ease-out;
+}
+
+@keyframes route-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes route-loading-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -7px);
+  }
+}
+
 .map-title {
   position: absolute;
   z-index: 600;
@@ -1121,6 +1212,14 @@ a:focus-visible {
   .map-tools {
     top: 16px;
     right: 12px;
+  }
+
+  .route-loading {
+    top: 70px;
+    right: 12px;
+    left: 12px;
+    min-width: 0;
+    transform: none;
   }
 
   .map-tip {

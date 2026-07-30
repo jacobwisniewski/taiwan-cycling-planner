@@ -7,6 +7,7 @@ import {
   Download,
   Flame,
   Info,
+  LoaderCircle,
   MapPinned,
   Menu,
   Mountain,
@@ -96,6 +97,7 @@ function App() {
     [planner.days, routedSegments],
   );
   const routedCount = routedSegments.length;
+  const routingProgressCount = routedCount + failedDayIds.size;
 
   useEffect(() => {
     const saveTimer = window.setTimeout(() => savePlanner(planner), 300);
@@ -361,34 +363,36 @@ function App() {
                     (segment) => segment.dayId === day.id,
                   );
                   return (
-                  <button
-                    key={day.id}
-                    className="day-row"
-                    onClick={() => selectDay(day.id)}
-                  >
-                    <span className={`day-index day-index--${day.difficulty}`}>
-                      {String(day.day).padStart(2, "0")}
-                    </span>
-                    <span className="day-main">
-                      <strong>{day.to}</strong>
-                      <small>
-                        {(routed?.distance ?? day.distance).toFixed(0)} km ·{" "}
-                        {formatNumber(
-                          Math.round(routed?.climbing ?? day.climbing),
-                        )}{" "}
-                        m
-                      </small>
-                      <em>
-                        <TentTree size={13} /> {day.camp}
-                      </em>
-                    </span>
-                    {day.onsen !== null && (
-                      <span className="onsen-badge" title={day.onsen}>
-                        <Flame size={14} />
+                    <button
+                      key={day.id}
+                      className="day-row"
+                      onClick={() => selectDay(day.id)}
+                    >
+                      <span
+                        className={`day-index day-index--${day.difficulty}`}
+                      >
+                        {String(day.day).padStart(2, "0")}
                       </span>
-                    )}
-                    <ChevronRight className="row-arrow" size={17} />
-                  </button>
+                      <span className="day-main">
+                        <strong>{day.to}</strong>
+                        <small>
+                          {(routed?.distance ?? day.distance).toFixed(0)} km ·{" "}
+                          {formatNumber(
+                            Math.round(routed?.climbing ?? day.climbing),
+                          )}{" "}
+                          m
+                        </small>
+                        <em>
+                          <TentTree size={13} /> {day.camp}
+                        </em>
+                      </span>
+                      {day.onsen !== null && (
+                        <span className="onsen-badge" title={day.onsen}>
+                          <Flame size={14} />
+                        </span>
+                      )}
+                      <ChevronRight className="row-arrow" size={17} />
+                    </button>
                   );
                 })}
               </div>
@@ -407,7 +411,9 @@ function App() {
           )}
         </aside>
 
-        <section className="map-shell">
+        <section
+          className={`map-shell${routingActive ? " is-routing" : ""}`}
+        >
           <MapView
             start={planner.start}
             days={planner.days}
@@ -426,6 +432,32 @@ function App() {
             <span>TAIWAN · 臺灣</span>
             <strong>23.6978° N</strong>
           </div>
+
+          {routingActive && (
+            <div className="route-loading" role="status" aria-live="polite">
+              <span className="route-loading__spinner" aria-hidden="true">
+                <LoaderCircle size={20} />
+              </span>
+              <span className="route-loading__copy">
+                <strong>Rebuilding bicycle route</strong>
+                <small>
+                  {routingProgressCount} of {planner.days.length} daily stages
+                  checked
+                </small>
+                <i aria-hidden="true">
+                  <span
+                    style={{
+                      transform: `scaleX(${
+                        planner.days.length === 0
+                          ? 1
+                          : routingProgressCount / planner.days.length
+                      })`,
+                    }}
+                  />
+                </i>
+              </span>
+            </div>
+          )}
 
           <div className="map-tools" aria-label="Map filters">
             {allKinds.map((kind) => (

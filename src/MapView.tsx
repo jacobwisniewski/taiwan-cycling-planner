@@ -234,14 +234,5 @@ export function MapView({
     onSelectDay,
   ]);
 
-  useEffect(() => {
-    const selected = days.find((day) => day.id === selectedDayId);
-    if (selected !== undefined) {
-      mapRef.current?.flyTo([selected.lat, selected.lng], 10, {
-        duration: 0.8,
-      });
-    }
-  }, [days, selectedDayId]);
-
   return <div ref={containerRef} className="map" aria-label="Route map" />;
 }
